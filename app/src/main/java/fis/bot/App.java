@@ -3,13 +3,80 @@
  */
 package fis.bot;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import fis.bot.entity.ConfigurationEntity;
+import fis.bot.entity.ReactionRoleMessageEntity;
+import fis.bot.handlers.NewMemberHandler;
+import fis.bot.handlers.ReactionRoleHandler;
+import fis.bot.handlers.ReactionRoleRemovalHandler;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.Message;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class App {
+    private static final Logger logger = Logger.getGlobal();
+    private static ConfigurationEntity configuration;
+
+    public static ConfigurationEntity getConfiguration() {
+        return configuration;
+    }
+
+    private static ConfigurationEntity readConfiguration() throws IOException {
+        String environmentalVariablePath = System.getenv("FIS_BOT_CONFIGURATION");
+        String configurationPath = environmentalVariablePath == null ? "configuration.json" : environmentalVariablePath;
+        byte[] jsonData = Files.readAllBytes(Path.of(configurationPath));
+        return new ObjectMapper().readValue(jsonData, ConfigurationEntity.class);
+    }
 
     public static void main(String[] args) {
-        String botToken = System.getenv("DISCORD_TOKEN");
-        DiscordApi api = new DiscordApiBuilder().setToken(botToken).setAllIntents().login().join();
+        try {
+            configuration = readConfiguration();
+        } catch (IOException exception) {
+            logger.severe(exception.getMessage());
+            logger.severe("Make sure there configuration.json file is present.");
+            System.exit(1);
+        }
+
+        DiscordApi api = new DiscordApiBuilder().setToken(configuration.botToken).setAllIntents().login().join();
+
+        setup(api);
+        api.addServerMemberJoinListener(new NewMemberHandler());
+        api.addReactionAddListener(new ReactionRoleHandler());
+        api.addReactionRemoveListener(new ReactionRoleRemovalHandler());
+    }
+
+    private static void setup(DiscordApi api) {
+
+        for (ReactionRoleMessageEntity reactionRoleMessage : configuration.reactionRoleMessages) {
+            List<String> reactions = reactionRoleMessage.reactionRoles.stream().map(reactionRole -> reactionRole.reaction).toList();
+
+            for (String reaction : reactions) {
+                api.getServerById(reactionRoleMessage.getServerId())
+                        .flatMap(server ->
+                                server.getTextChannelById(reactionRoleMessage.getChannelId())).ifPresent(channel -> initializeReactions(reactionRoleMessage, reaction, channel));
+            }
+        }
+    }
+
+    private static void initializeReactions(
+            ReactionRoleMessageEntity reactionRoleMessage,
+            String reaction,
+            TextChannel channel) {
+        Message message = channel.getMessageById(reactionRoleMessage.getMessageId()).join();
+        boolean containsEmoji = message.getReactions().stream()
+                .anyMatch(existingReaction -> existingReaction.getEmoji().equalsEmoji(reaction));
+        if (!containsEmoji) {
+            message.addReaction(reaction);
+        } else {
+            logger.log(Level.INFO, "Reaction is already present: {0}", reaction);
+        }
     }
 }
