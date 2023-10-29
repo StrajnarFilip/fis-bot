@@ -25,6 +25,9 @@ dependencies {
     implementation 'com.google.guava:guava:31.1-jre'
 
     implementation 'org.javacord:javacord:3.8.0'
+
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.3'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
