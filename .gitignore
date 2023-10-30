@@ -7,3 +7,5 @@ build
 
 /configuration.json
 /run.ps1
+/check.ps1
+/.scannerwork
