@@ -23,6 +23,7 @@ public class ReactionRoleRemovalHandler implements ReactionRemoveListener {
     @Override
     public void onReactionRemove(ReactionRemoveEvent event) {
         event.getReaction().ifPresent(reaction -> event.getServer()
-                .ifPresent(server -> event.getUser().ifPresent(user -> handleRemoval(server, event.getMessageId(), reaction, user))));
+                .ifPresent(server -> event.getUser().ifPresent(user -> handleRemoval(server, event.getMessageId(),
+                        reaction, user))));
     }
 }

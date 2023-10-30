@@ -56,7 +56,8 @@ public class App {
     private static void setup(DiscordApi api) {
 
         for (ReactionRoleMessageEntity reactionRoleMessage : configuration.reactionRoleMessages) {
-            List<String> reactions = reactionRoleMessage.reactionRoles.stream().map(reactionRole -> reactionRole.reaction).toList();
+            List<String> reactions =
+                    reactionRoleMessage.reactionRoles.stream().map(reactionRole -> reactionRole.reaction).toList();
 
             for (String reaction : reactions) {
                 api.getServerById(reactionRoleMessage.getServerId())

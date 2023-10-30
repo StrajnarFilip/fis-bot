@@ -1,0 +1,15 @@
+{
+  "bot-token": "",
+  "welcome-channel-id": "",
+  "roles-channel-id": "",
+  "reaction-role-messages": [
+    {
+      "message-link": "",
+      "only-one": true,
+      "reaction-roles": [
+        { "reaction": "⛵", "role": "" },
+        { "reaction": "⛰️", "role": "" }
+      ]
+    }
+  ]
+}
